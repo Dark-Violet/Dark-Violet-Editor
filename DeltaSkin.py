@@ -1,12 +1,13 @@
-#
+# Dark Violet Editor - A Delta Skin mapping editor tool.
+# Copyright Dark Violet - All Rights Reserved
+
 from pathlib import Path
 from tkinter import *
 from tkinter import ttk
-import time
 import json
 import easygui
 from pdf2image import convert_from_path
-import os
+import tempfile
 
 def chooseSize():
     size = input("Choose the screen size you want to change\n1- standard\n2- edgeToEdge\n")
@@ -16,7 +17,7 @@ def chooseSize():
     elif size == "2":
         return "edgeToEdge"
     else:
-        print('Selection failed!')
+        print("Selection failed!")
         chooseSize()
 
 def chooseOrientation():
@@ -27,35 +28,37 @@ def chooseOrientation():
     elif size == "2":
         return "portrait"
     else:
-        print('Selection failed!')
+        print("Selection failed!")
         chooseOrientation()
 
-def printSkinInfo(skin):
-    print('Name: {}\nConsole: {}\nSkin identifier: {}'.format(
-    skin["name"], skin["gameTypeIdentifier"].split('.')[-1:][0],skin['identifier']
-    ))
+def printSkinInfo(skin_info: dict):
+    print("Name: {}\nConsole: {}\nSkin identifier: {}".format(skin_info["name"], skin_info["gameTypeIdentifier"].split(".")[3], skin_info["identifier"]))
 
 class Interface(Frame):
 
-    def __init__(self, fenetre = None):
-        self.fenetre = fenetre
-        self.fenetre.title("Delta Skin Editor") #window title
-        self.fenetre.resizable(False, False)
+    def __init__(self, window: Tk = None):
+        self.window = window
+        self.window.title("Dark Violet Editor")
+        self.window.resizable(False, False)
 
        # canvas object to create shape
 
-        self.canvas = Canvas(fenetre,width=positions["representations"]["iphone"][size][orientation]['mappingSize']['width'],height=positions["representations"]["iphone"][size][orientation]['mappingSize']['height'])
+        self.canvas = Canvas(window, width=positions["representations"]["iphone"][size][orientation]["mappingSize"]["width"], height=positions["representations"]["iphone"][size][orientation]["mappingSize"]["height"])
 
-        if positions["representations"]["iphone"][size][orientation]["assets"]["resizable"].split('.')[-1:][0] == "pdf":
-            for page in convert_from_path(str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"], size=(positions["representations"]["iphone"][size][orientation]['mappingSize']['width'],positions["representations"]["iphone"][size][orientation]['mappingSize']['height'])):
-                page.save('out.png', 'PNG')
+        # Finds image from file and add to interface
+        if "resizable" in positions["representations"]["iphone"][size][orientation]["assets"].keys(): # should only be pdf images
+            # Use a temp dir to convert pdf to png
+            with tempfile.TemporaryDirectory() as tmpdir:
+                pages = convert_from_path(str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"], size=(positions["representations"]["iphone"][size][orientation]["mappingSize"]["width"], positions["representations"]["iphone"][size][orientation]["mappingSize"]["height"]))
+                pages[0].save(tmpdir + "/temp.png", "PNG")
 
-            self.image = PhotoImage(file='out.png')
-            self.canvas.background = self.canvas.create_image(0,0,image=self.image,anchor=NW)
+                # Add image to interface from temp dir
+                self.image = PhotoImage(file=tmpdir + "/temp.png")
+                self.canvas.background = self.canvas.create_image(0, 0, image=self.image, anchor=NW)
 
         else:
-            self.image = PhotoImage(file=str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"])
-            self.canvas.background = self.canvas.create_image(0,0,image=self.image,anchor=NW)
+            self.image = PhotoImage(file=str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["large"])
+            self.canvas.background = self.canvas.create_image(0, 0, image=self.image, anchor=NW)
 
         self.canvas.pack()
 
@@ -74,25 +77,21 @@ class Interface(Frame):
         ver = 0
         hor = 0
         if press.keysym == "Right":
-            hor = 1
-        elif press.keysym == "Left":
-            hor = -1
+            hor += 1
+        if press.keysym == "Left":
+            hor += -1
+        if press.keysym == "Down":
+            ver += 1
+        if press.keysym == "Up":
+            ver += -1
 
-        elif press.keysym == "Down":
-            ver = 1
-        elif press.keysym == "Up":
-            ver = -1
-
-        try:
+        if hasattr(self, "selectedItem"):
             self.canvas.move(self.canvas.elements[self.selectedItem], hor, ver)
             self.canvas.move(self.canvas.elementsT[self.selectedItem], hor, ver)
             self.canvas.move(self.canvas.elementsE[self.selectedItem], hor, ver)
 
             self.dico[self.selectedItem]["frame"]["x"] += hor
             self.dico[self.selectedItem]["frame"]["y"] += ver
-
-        except:
-            print("error lol (prob nothing selected)")
 
     def scrapButtonsPos(self, json):
         self.dico = {}
@@ -104,7 +103,7 @@ class Interface(Frame):
                 self.dico[elem["inputs"][0]] = elem
 
     def collision(self, position):
-        for key,item in self.dico.items():
+        for key, item in self.dico.items():
             if item["frame"]["x"] < position.x and item["frame"]["x"] + item["frame"]["width"] > position.x:
                 if item["frame"]["y"] < position.y and item["frame"]["y"] + item["frame"]["height"] > position.y:
                     self.selectedItem = key
@@ -157,18 +156,16 @@ class Interface(Frame):
 
         for elem in self.dico:
             if "screen_" in elem:
-                positions["representations"]["iphone"][size][orientation]["screens"][int(elem.split('_')[-1]) - 1]["outputFrame"] = self.dico[elem]["frame"]
+                positions["representations"]["iphone"][size][orientation]["screens"][int(elem.split("_")[-1]) - 1]["outputFrame"] = self.dico[elem]["frame"]
             else:
-                i=0
-                for truc in positions["representations"]["iphone"][size][orientation]["items"]:
+                for i, truc in enumerate(positions["representations"]["iphone"][size][orientation]["items"]):
                     positions["representations"]["iphone"][size][orientation]["items"][i]["inputs"]
-                    i+=1
 
         with open(filepath, "w") as file:
             json.dump(file, positions, indent=2)
         print("Changes saved.")
 
-skinpath = Path(easygui.diropenbox(title="Select skin folder"))
+skinpath = Path(easygui.diropenbox(title="Select Skin Folder"))
 
 with open(str(skinpath) + "/info.json", "r") as file:
     positions = json.load(file)
@@ -178,19 +175,19 @@ orientation = chooseOrientation()
 
 printSkinInfo(positions)
 
-fenetre = Tk()
-lol = Interface(fenetre)
+window = Tk()
+gui = Interface(window)
 
-fenetre.bind("<Button-1>", lol.collision)
+window.bind("<Button-1>", gui.collision)
 
-fenetre.bind('<Left>', lol.move)
-fenetre.bind('<Right>', lol.move)
+window.bind("<Left>", gui.move)
+window.bind("<Right>", gui.move)
 
-fenetre.bind('<Up>', lol.move)
-fenetre.bind('<Down>', lol.move)
+window.bind("<Up>", gui.move)
+window.bind("<Down>", gui.move)
 
-fenetre.bind('<Control-s>', lol.save)
+window.bind("<Control-s>", gui.save)
 
-# fenetre.bind("<MouseWheel>", lol.wheel)
+# window.bind("<MouseWheel>", gui.wheel)
 
 mainloop()
