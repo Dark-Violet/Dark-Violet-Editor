@@ -1,5 +1,5 @@
-# 
-
+#
+from pathlib import Path
 from tkinter import *
 from tkinter import ttk
 import time
@@ -47,14 +47,14 @@ class Interface(Frame):
         self.canvas = Canvas(fenetre,width=positions["representations"]["iphone"][size][orientation]['mappingSize']['width'],height=positions["representations"]["iphone"][size][orientation]['mappingSize']['height'])
 
         if positions["representations"]["iphone"][size][orientation]["assets"]["resizable"].split('.')[-1:][0] == "pdf":
-            for page in convert_from_path(path + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"], size=(positions["representations"]["iphone"][size][orientation]['mappingSize']['width'],positions["representations"]["iphone"][size][orientation]['mappingSize']['height'])):
+            for page in convert_from_path(str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"], size=(positions["representations"]["iphone"][size][orientation]['mappingSize']['width'],positions["representations"]["iphone"][size][orientation]['mappingSize']['height'])):
                 page.save('out.png', 'PNG')
 
             self.image = PhotoImage(file='out.png')
             self.canvas.background = self.canvas.create_image(0,0,image=self.image,anchor=NW)
 
         else:
-            self.image = PhotoImage(file=path + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"])
+            self.image = PhotoImage(file=str(skinpath) + "/" + positions["representations"]["iphone"][size][orientation]["assets"]["resizable"])
             self.canvas.background = self.canvas.create_image(0,0,image=self.image,anchor=NW)
 
         self.canvas.pack()
@@ -168,14 +168,10 @@ class Interface(Frame):
             json.dump(file, positions, indent=2)
         print("Changes saved.")
 
+skinpath = Path(easygui.diropenbox(title="Select skin folder"))
 
-filepath = easygui.fileopenbox()
-
-with open(filepath, "r") as file:
+with open(str(skinpath) + "/info.json", "r") as file:
     positions = json.load(file)
-    path = file.split("\\")[:-1] #need to figure out what the hell this does
-    path = "\\".join(path)
-    path += "\\"
 
 size = chooseSize()
 orientation = chooseOrientation()
