@@ -72,6 +72,10 @@ class EditorInterface(Frame):
 
         self.makeScreens()
 
+        self.setupPopup()
+        
+        self.moveSelect = "globalW"
+        
     def move(self, press):
         ver = 0
         hor = 0
@@ -107,6 +111,7 @@ class EditorInterface(Frame):
             if item["frame"]["x"] < position.x and item["frame"]["x"] + item["frame"]["width"] > position.x:
                 if item["frame"]["y"] < position.y and item["frame"]["y"] + item["frame"]["height"] > position.y:
                     self.selectedItem = key
+                    return key #not used rn will try to do something cleaner with it
 
 
     def makeElement(self, element):
@@ -145,7 +150,7 @@ class EditorInterface(Frame):
 
                 self.canvas.elements[screenName] = self.canvas.create_rectangle(self.dico[screenName]["frame"]["x"], self.dico[screenName]["frame"]["y"], self.dico[screenName]["frame"]["x"] + self.dico[screenName]["frame"]["width"], self.dico[screenName]["frame"]["y"] + self.dico[screenName]["frame"]["height"], fill = "yellow", stipple="gray50")
                 self.canvas.elementsT[screenName] = self.canvas.create_text(self.dico[screenName]["frame"]["x"] + int(self.dico[screenName]["frame"]["width"]/2), self.dico[screenName]["frame"]["y"] + int(self.dico[screenName]["frame"]["height"]/2), text=screenName)
-                # self.canvas.elementsE[screenName] = self.canvas.create_rectangle(0,0,0,0) #just to avoid errors when moving
+                # self.canvas.elementsE[screenName] = self.canvas.create_rectangle(0,0,0,0) #just to avoid errors when moving lol nice coding
         else:
             print("No screens present, using default position.")
 
@@ -162,6 +167,125 @@ class EditorInterface(Frame):
         with open(str(skinpath) + "/info.json", "w") as file:
             json.dump(positions, file, indent=2)
         print("Changes saved.")
+    
+    def setupPopup(self):
+        self.menu = Menu(window, tearoff = 0) 
+        self.menu.add_command(label ="Change left extend", command=lambda: self.setMove("left"))
+        self.menu.add_command(label ="Change right extend", command=lambda: self.setMove("right")) 
+        self.menu.add_command(label ="Change top extend", command=lambda: self.setMove("top")) 
+        self.menu.add_command(label ="Change bottom extend", command=lambda: self.setMove("bottom")) 
+        self.menu.add_separator() 
+        self.menu.add_command(label ="Remove left extend", command=lambda: self.removeExtend("left"))
+        self.menu.add_command(label ="Remove right extend", command=lambda: self.removeExtend("right")) 
+        self.menu.add_command(label ="Remove top extend", command=lambda: self.removeExtend("top")) 
+        self.menu.add_command(label ="Remove bottom extend", command=lambda: self.removeExtend("bottom")) 
+        self.menu.add_separator() 
+        self.menu.add_command(label ="Change main width size", command=lambda: self.setMove("globalW")) 
+        self.menu.add_command(label ="Change main height size", command=lambda: self.setMove("globalH")) 
+        
+    def setMove(self, direction):
+        self.moveSelect = direction
+        
+    def popup(self, event):
+        self.collision(event)
+        self.menu.tk_popup(event.x_root, event.y_root)
+    
+    
+    def removeExtend(self, element):
+        try:
+            type(self.selectedItem)
+        except AttributeError:
+            print('Nothing selected')
+            return
+        
+        try:
+            del(self.dico[self.selectedItem]["extendedEdges"][element])
+                    
+            sides = ["top", "bottom", "left", "right"]
+            extend = {}
+                    
+            for side in sides:
+                if self.dico[self.selectedItem]["extendedEdges"].get(side) is None:
+                    extend[side] = positions["representations"]["iphone"][size][orientation]["extendedEdges"].get(side)
+                else:
+                    extend[side] = self.dico[self.selectedItem]["extendedEdges"].get(side)
+                    
+            self.canvas.coords(self.canvas.elementsE[self.selectedItem],
+            self.dico[self.selectedItem]["frame"]["x"] - extend["left"],
+            self.dico[self.selectedItem]["frame"]["y"] - extend["top"], 
+            self.dico[self.selectedItem]["frame"]["x"] + self.dico[self.selectedItem]["frame"]["width"] + extend["right"],
+            self.dico[self.selectedItem]["frame"]["y"] + self.dico[self.selectedItem]["frame"]["height"] + extend["bottom"])
+
+        except KeyError:
+            print("Failed to delete the {} extended edge (doesn't exist)".format(element))
+    
+    
+    
+    def changeSize(self, event):
+        try:
+            type(self.selectedItem)
+        except AttributeError:
+            print('Nothing selected')
+            return
+                
+        
+        if event.keysym == "plus":
+            n = 1
+        else:
+            n = -1
+        
+        if "global" in self.moveSelect:
+            x0, y0, width, height = self.canvas.coords(self.canvas.elements[self.selectedItem])
+            if not "screen" in self.selectedItem:
+                x1, y1, width1, height1 = self.canvas.coords(self.canvas.elementsE[self.selectedItem])
+            h=0
+            w=0
+            if self.moveSelect == "globalW":
+                if self.dico[self.selectedItem]["frame"]["width"] + n == 1:
+                else:
+                    w=n
+            
+            elif self.moveSelect == "globalH":
+                if self.dico[self.selectedItem]["frame"]["height"] + n == 1:
+                    print("Can't make an element smaller than 1px (nice try)")
+                else:
+                    h=n
+                    
+            self.dico[self.selectedItem]["frame"]["width"] += w
+            self.dico[self.selectedItem]["frame"]["height"] += h
+            self.canvas.coords(self.canvas.elements[self.selectedItem], x0, y0, width+w, height+h)
+            self.canvas.coords(self.canvas.elementsT[self.selectedItem], x0 + int(self.dico[self.selectedItem]["frame"]["width"]/2), y0+ int(self.dico[self.selectedItem]["frame"]["height"]/2))
+            if not "screen" in self.selectedItem:
+                self.canvas.coords(self.canvas.elementsE[self.selectedItem], x1, y1, width1+w, height1+h)
+        
+        elif "screen" in self.selectedItem:
+            print("You can't change the extend of screens")
+        
+        else:
+                
+            if self.dico[self.selectedItem]["extendedEdges"].get(self.moveSelect) is None :
+                self.dico[self.selectedItem]["extendedEdges"][self.moveSelect] = 0
+            if self.dico[self.selectedItem]["extendedEdges"][self.moveSelect] + n < 0:
+                print("extended edges can't be negative")
+                return
+            else:
+                self.dico[self.selectedItem]["extendedEdges"][self.moveSelect] += n
+                
+            sides = ["top", "bottom", "left", "right"]
+            extend = {}
+                    
+            for side in sides:
+                if self.dico[self.selectedItem]["extendedEdges"].get(side) is None:
+                    extend[side] = positions["representations"]["iphone"][size][orientation]["extendedEdges"].get(side)
+                else:
+                    extend[side] = self.dico[self.selectedItem]["extendedEdges"].get(side)
+                    
+            self.canvas.coords(self.canvas.elementsE[self.selectedItem],
+            self.dico[self.selectedItem]["frame"]["x"] - extend["left"],
+            self.dico[self.selectedItem]["frame"]["y"] - extend["top"], 
+            self.dico[self.selectedItem]["frame"]["x"] + self.dico[self.selectedItem]["frame"]["width"] + extend["right"],
+            self.dico[self.selectedItem]["frame"]["y"] + self.dico[self.selectedItem]["frame"]["height"] + extend["bottom"])
+
 
 skinpath = Path(easygui.diropenbox(title="Select Skin Folder"))
 
@@ -185,6 +309,12 @@ window.bind("<Up>", gui.move)
 window.bind("<Down>", gui.move)
 
 window.bind("<Control-s>", gui.save)
+
+window.bind("<Button-3>", gui.popup)
+
+window.bind("<+>", gui.changeSize)
+window.bind("<minus>", gui.changeSize)
+
 
 # window.bind("<MouseWheel>", gui.wheel)
 
