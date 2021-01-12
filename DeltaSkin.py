@@ -159,8 +159,8 @@ class EditorInterface(Frame):
                 for i, truc in enumerate(positions["representations"]["iphone"][size][orientation]["items"]):
                     positions["representations"]["iphone"][size][orientation]["items"][i]["inputs"]
 
-        with open(filepath, "w") as file:
-            json.dump(file, positions, indent=2)
+        with open(str(skinpath) + "/info.json", "w") as file:
+            json.dump(positions, file, indent=2)
         print("Changes saved.")
 
 skinpath = Path(easygui.diropenbox(title="Select Skin Folder"))
