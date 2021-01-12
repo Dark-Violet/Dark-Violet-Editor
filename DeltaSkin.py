@@ -32,17 +32,16 @@ def chooseOrientation():
         chooseOrientation()
 
 def printSkinInfo(skin_info: dict):
-    print("Name: {}\nConsole: {}\nSkin identifier: {}".format(skin_info["name"], skin_info["gameTypeIdentifier"].split(".")[3], skin_info["identifier"]))
+    print("Name: {}\nConsole: {}\nSkin Identifier: {}".format(skin_info["name"], skin_info["gameTypeIdentifier"].split(".")[-1], skin_info["identifier"]))
 
-class Interface(Frame):
+class EditorInterface(Frame):
 
     def __init__(self, window: Tk = None):
         self.window = window
         self.window.title("Dark Violet Editor")
         self.window.resizable(False, False)
 
-       # canvas object to create shape
-
+        # Create canvas object to display images
         self.canvas = Canvas(window, width=positions["representations"]["iphone"][size][orientation]["mappingSize"]["width"], height=positions["representations"]["iphone"][size][orientation]["mappingSize"]["height"])
 
         # Finds image from file and add to interface
@@ -67,11 +66,11 @@ class Interface(Frame):
         self.canvas.elementsE = {}
         self.canvas.elements = {}
         self.canvas.elementsT = {}
+
         for elem in self.dico:
             self.makeElement(elem)
 
         self.makeScreens()
-
 
     def move(self, press):
         ver = 0
@@ -88,7 +87,8 @@ class Interface(Frame):
         if hasattr(self, "selectedItem"):
             self.canvas.move(self.canvas.elements[self.selectedItem], hor, ver)
             self.canvas.move(self.canvas.elementsT[self.selectedItem], hor, ver)
-            self.canvas.move(self.canvas.elementsE[self.selectedItem], hor, ver)
+            if self.selectedItem in self.canvas.elementsE.keys():
+                self.canvas.move(self.canvas.elementsE[self.selectedItem], hor, ver)
 
             self.dico[self.selectedItem]["frame"]["x"] += hor
             self.dico[self.selectedItem]["frame"]["y"] += ver
@@ -135,21 +135,19 @@ class Interface(Frame):
         self.canvas.elementsT[element] = self.canvas.create_text(self.dico[element]["frame"]["x"] + int(self.dico[element]["frame"]["width"]/2), self.dico[element]["frame"]["y"] + int(self.dico[element]["frame"]["height"]/2), text=element)
 
     def makeScreens(self):
-        if positions["representations"]["iphone"][size][orientation].get("screens") != None:
-            i=0
-            for elem in positions["representations"]["iphone"][size][orientation]["screens"]:
-                i+=1
+        if "screens" in positions["representations"]["iphone"][size][orientation].keys():
+            for i, elem in enumerate(positions["representations"]["iphone"][size][orientation]["screens"]):
 
-                screenName = "screen" + "_" + str(i)
+                screenName = "screen_" + str(i)
 
                 self.dico[screenName] = {}
                 self.dico[screenName]["frame"] = elem["outputFrame"]
 
                 self.canvas.elements[screenName] = self.canvas.create_rectangle(self.dico[screenName]["frame"]["x"], self.dico[screenName]["frame"]["y"], self.dico[screenName]["frame"]["x"] + self.dico[screenName]["frame"]["width"], self.dico[screenName]["frame"]["y"] + self.dico[screenName]["frame"]["height"], fill = "yellow", stipple="gray50")
                 self.canvas.elementsT[screenName] = self.canvas.create_text(self.dico[screenName]["frame"]["x"] + int(self.dico[screenName]["frame"]["width"]/2), self.dico[screenName]["frame"]["y"] + int(self.dico[screenName]["frame"]["height"]/2), text=screenName)
-                self.canvas.elementsE[screenName] = self.canvas.create_rectangle(0,0,0,0) #just to avoid errors when moving
+                # self.canvas.elementsE[screenName] = self.canvas.create_rectangle(0,0,0,0) #just to avoid errors when moving
         else:
-            print("No screens there")
+            print("No screens present, using default position.")
 
 
     def save(self, osef):
@@ -176,7 +174,7 @@ orientation = chooseOrientation()
 printSkinInfo(positions)
 
 window = Tk()
-gui = Interface(window)
+gui = EditorInterface(window=window)
 
 window.bind("<Button-1>", gui.collision)
 
