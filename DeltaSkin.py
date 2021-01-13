@@ -167,7 +167,7 @@ class EditorInterface(Frame):
         
         
         #fix a bug where screens were saved the wrong way
-        for key, elem in enumerate(reversed(self.dicoFix)):
+        for key, elem in enumerate(reversed(self.fixScreen)):
             positions["representations"]["iphone"][size][orientation]["screens"][key]["outputFrame"] = self.fixScreen[key]["frame"]
         
         with open(str(skinpath) + "/info.json", "w") as file:
