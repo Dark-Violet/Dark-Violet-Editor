@@ -111,7 +111,7 @@ class EditorInterface(Frame):
             if item["frame"]["x"] < position.x and item["frame"]["x"] + item["frame"]["width"] > position.x:
                 if item["frame"]["y"] < position.y and item["frame"]["y"] + item["frame"]["height"] > position.y:
                     self.selectedItem = key
-                    return key #not used rn will try to do something cleaner with it
+                    return key #used now
 
 
     def makeElement(self, element):
@@ -187,11 +187,16 @@ class EditorInterface(Frame):
         self.moveSelect = direction
         
     def popup(self, event):
+        if self.collision(event) == None:
+            return
         self.collision(event)
         self.menu.tk_popup(event.x_root, event.y_root)
     
     
     def removeExtend(self, element):
+        if self.collision(event) == None:
+            return
+        self.collision(event)
         try:
             type(self.selectedItem)
         except AttributeError:
@@ -242,6 +247,7 @@ class EditorInterface(Frame):
             w=0
             if self.moveSelect == "globalW":
                 if self.dico[self.selectedItem]["frame"]["width"] + n == 1:
+                    print("Can't make an element smaller than 1px (nice try)")
                 else:
                     w=n
             
