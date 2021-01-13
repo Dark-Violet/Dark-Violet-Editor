@@ -21,6 +21,8 @@ After starting the application, select the folder that contains your Delta Skin 
 
 Then use the command line interface to select what parts of the skin you want to display.
 
-Click on a button mapping you would like to move then use the arrow keys to shift its position.
+Click on a button mapping or screen you would like to move then use the arrow keys to shift its position.
+
+To change the width/height of an element and/or remove/resize its extended edges, right click on an element and choose the option you want to use, then use +/- to resize (if you need to)
 
 Use Ctrl-S to save any changes you make.
