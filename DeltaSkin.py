@@ -156,14 +156,20 @@ class EditorInterface(Frame):
 
 
     def save(self, osef):
-
+        
+        self.fixScreen = []
         for elem in self.dico:
             if "screen_" in elem:
-                positions["representations"]["iphone"][size][orientation]["screens"][int(elem.split("_")[-1]) - 1]["outputFrame"] = self.dico[elem]["frame"]
+                self.fixScreen.append(self.dico[elem])
             else:
                 for i, truc in enumerate(positions["representations"]["iphone"][size][orientation]["items"]):
                     positions["representations"]["iphone"][size][orientation]["items"][i]["inputs"]
-
+        
+        
+        #fix a bug where screens were saved the wrong way
+        for key, elem in enumerate(reversed(self.dicoFix)):
+            positions["representations"]["iphone"][size][orientation]["screens"][key]["outputFrame"] = self.fixScreen[key]["frame"]
+        
         with open(str(skinpath) + "/info.json", "w") as file:
             json.dump(positions, file, indent=2)
         print("Changes saved.")
@@ -194,9 +200,6 @@ class EditorInterface(Frame):
     
     
     def removeExtend(self, element):
-        if self.collision(event) == None:
-            return
-        self.collision(event)
         try:
             type(self.selectedItem)
         except AttributeError:
