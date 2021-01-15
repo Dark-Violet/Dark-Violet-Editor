@@ -188,7 +188,8 @@ class EditorInterface(Frame):
         self.menu.add_separator() 
         self.menu.add_command(label ="Change main width size", command=lambda: self.setMove("globalW")) 
         self.menu.add_command(label ="Change main height size", command=lambda: self.setMove("globalH")) 
-        
+        self.menu.add_separator() 
+        self.menu.add_command(label ="Aspect ratio of screens (console)", command=self.ratio) 
     def setMove(self, direction):
         self.moveSelect = direction
         
@@ -227,8 +228,29 @@ class EditorInterface(Frame):
         except KeyError:
             print("Failed to delete the {} extended edge (doesn't exist)".format(element))
     
-    
-    
+    def info(self, event): 
+        if self.collision(event) == None:
+            print('Nothing selected.')
+        else:
+            print("\n====Selected item: {}====".format(self.selectedItem))
+            for elem in self.dico[self.selectedItem]:
+                print("\n" + elem + ":")
+                for data in self.dico[self.collision(event)][elem]:
+                    if elem == "inputs":
+                        print(data + ": " + str(self.dico[self.selectedItem][elem]))
+                    else:
+                         print(data + ": " + str(self.dico[self.selectedItem][elem][data]))
+
+    def ratio(self):
+        print("Some info about screen aspect ratios for screens:\n\
+Console, Full inputFrame, Aspect Ratio\n \
+GameBoy (Color): 160 x 144, 10:9\n \
+GameBoy Advance: 240 x 160, 3:2\n \
+Nintendo DS: 256 x 384, 2:3 (NOTE:the DS outputs 2 screens so a single screen should be half that aspect ratio)\n \
+Nintendo Entertainment System: 256 x 240, 16:15\n \
+Super Nintendo Entertainment System: 256 x 224, 8:7\n \
+Nintendo 64: 256 x 224, 8:7")
+
     def changeSize(self, event):
         try:
             type(self.selectedItem)
@@ -320,6 +342,7 @@ window.bind("<Down>", gui.move)
 window.bind("<Control-s>", gui.save)
 
 window.bind("<Button-3>", gui.popup)
+window.bind("<Button-2>", gui.info)
 
 window.bind("<+>", gui.changeSize)
 window.bind("<minus>", gui.changeSize)

@@ -27,4 +27,7 @@ Click on a button mapping or screen you would like to move then use the arrow ke
 
 To change the width/height of an element and/or remove/resize its extended edges, right click on an element and choose the option you want to use, then use +/- to resize (if you need to)
 
+Middle click on an element to get some infos about it
+
 Use Ctrl-S to save any changes you make.
+
