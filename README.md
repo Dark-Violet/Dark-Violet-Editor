@@ -6,7 +6,7 @@ A rich featured Delta Skin editor that's compatible with most modern operating s
 
 Install the latest version of Python from [python.org](https://www.python.org/downloads/).
 
-Install poppler and add it to path (you can get ir from here: https://github.com/oschwartz10612/poppler-windows/releases/)
+Install poppler and add it to path (you can get it from here: https://github.com/oschwartz10612/poppler-windows/releases/)
 
 Run the following commands once Python is installed:
 
