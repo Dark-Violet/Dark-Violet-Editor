@@ -31,3 +31,6 @@ Middle click on an element to get some infos about it
 
 Use Ctrl-S to save any changes you make.
 
+# Additional info
+
+As of now the code looks (and is) really ugly, I pretty much just yoloed it and did research while writing it. I will probably eventually rewrite it when i have the time/motivation to (and if possible a bit more knowledge in what not to do)
